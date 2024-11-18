@@ -10,7 +10,9 @@
     <%
     String userName = (String) session.getAttribute("authenticatedUser");
     if (userName == null) {
-        response.sendRedirect("login.jsp");
+        if (!response.isCommitted()) {
+            response.sendRedirect("login.jsp");
+        }
         return;
     }
     %>
