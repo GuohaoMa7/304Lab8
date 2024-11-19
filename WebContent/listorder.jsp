@@ -1,6 +1,7 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.Locale" %>
+<%@ page import="javax.servlet.http.HttpSession" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +12,6 @@
             background-color: #f4f4f4;
             color: #333;
             margin: 0;
-            
             text-align: center;
         }
         h1 {
@@ -24,7 +24,6 @@
             margin: 20px auto;
             border-collapse: collapse;
             background-color: #ffffff;
-          
         }
         th, td {
             padding: 12px;
@@ -35,7 +34,6 @@
             background-color: #008080;
             color: white;
             font-weight: bold;
-            
             font-size: 0.85em;
         }
         .order-header {
@@ -59,8 +57,17 @@
     </style>
 </head>
 <body>
-<h1>Doujiao Grocery Order </h1>
+<h1>Doujiao Grocery Order</h1>
 <%
+    // 获取当前会话以检查用户是否已登录
+    HttpSession session = request.getSession(false);
+    if (session == null || session.getAttribute("authenticatedUser") == null) {
+        response.sendRedirect("login.jsp"); // 如果用户未登录，重定向到登录页面
+        return;
+    }
+
+    String authenticatedUser = (String) session.getAttribute("authenticatedUser");
+
     try {
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
     } catch (ClassNotFoundException e) {
@@ -76,8 +83,11 @@
          Statement stmt = con.createStatement()) {
 
         String orderQuery = "SELECT O.orderId, O.orderDate, C.customerId, C.firstName, C.lastname, O.totalAmount " +
-                            "FROM ordersummary AS O INNER JOIN customer AS C ON O.customerId = C.customerId";
-        ResultSet orders = stmt.executeQuery(orderQuery);
+                            "FROM ordersummary AS O INNER JOIN customer AS C ON O.customerId = C.customerId " +
+                            "WHERE C.customerId = ?";
+        PreparedStatement orderStmt = con.prepareStatement(orderQuery);
+        orderStmt.setString(1, authenticatedUser);
+        ResultSet orders = orderStmt.executeQuery();
 
         PreparedStatement productStmt = con.prepareStatement(
             "SELECT productId, quantity, price FROM orderproduct WHERE orderId = ?");

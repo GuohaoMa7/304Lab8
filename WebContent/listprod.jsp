@@ -2,6 +2,7 @@
 <%@ page import="java.text.NumberFormat" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF8"%>
 <%@ page import="java.util.Locale" %>
+<%@ page import="javax.servlet.http.HttpSession" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,6 +65,15 @@
 </header>
 
 <h2>Browse Products by Category and Search by Product Name:</h2>
+<%
+    // 获取当前会话以检查用户是否已登录
+    HttpSession session = request.getSession(false);
+    if (session == null || session.getAttribute("authenticatedUser") == null) {
+        response.sendRedirect("login.jsp"); // 如果用户未登录，重定向到登录页面
+        return;
+    }
+%>
+
 <form method="get" action="listprod.jsp">
     <select name="categoryName">
         <option value="All">All</option>
@@ -75,8 +85,6 @@
         <option value="Seafood">Seafood</option>
         <option value="Confections">Confections</option>
         <option value="Grains/Cereals">Grains/Cereals</option>
-
-
     </select>
     <input type="text" name="productName" size="50" placeholder="Enter product name...">
     <input type="submit" value="Search">

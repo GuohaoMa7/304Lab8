@@ -1,38 +1,49 @@
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.ArrayList" %>
-<%
-// Get the current list of products
-@SuppressWarnings({"unchecked"})
-HashMap<String, ArrayList<Object>> productList = (HashMap<String, ArrayList<Object>>) session.getAttribute("productList");
+<%@ page import="javax.servlet.http.HttpSession" %>
 
-if (productList == null)
-{	// No products currently in list.  Create a list.
-	productList = new HashMap<String, ArrayList<Object>>();
+<%
+// 获取当前会话
+HttpSession httpSession = request.getSession(false);
+if (httpSession == null || httpSession.getAttribute("authenticatedUser") == null) {
+    response.sendRedirect("login.jsp"); // 如果用户未登录，则重定向到登录页面
+    return;
 }
 
-// Add new product selected
-// Get product information
+// 获取当前用户的购物车
+@SuppressWarnings({"unchecked"})
+HashMap<String, ArrayList<Object>> productList = (HashMap<String, ArrayList<Object>>) httpSession.getAttribute("productList");
+
+if (productList == null) {
+    // 如果当前没有购物车，创建一个新的
+    productList = new HashMap<String, ArrayList<Object>>();
+}
+
+// 获取产品信息
 String id = request.getParameter("id");
 String name = request.getParameter("name");
 String price = request.getParameter("price");
-Integer quantity = new Integer(1);
+Integer quantity = 1; // 默认数量为 1
 
-// Store product information in an ArrayList
+// 创建产品信息的 ArrayList
 ArrayList<Object> product = new ArrayList<Object>();
 product.add(id);
 product.add(name);
 product.add(price);
 product.add(quantity);
 
-// Update quantity if add same item to order again
-if (productList.containsKey(id))
-{	product = (ArrayList<Object>) productList.get(id);
-	int curAmount = ((Integer) product.get(3)).intValue();
-	product.set(3, new Integer(curAmount+1));
+// 如果购物车中已经有相同的产品，更新数量
+if (productList.containsKey(id)) {
+    product = productList.get(id);
+    int curAmount = ((Integer) product.get(3)).intValue();
+    product.set(3, curAmount + 1);
+} else {
+    productList.put(id, product);
 }
-else
-	productList.put(id,product);
 
-session.setAttribute("productList", productList);
+// 更新会话中的购物车
+httpSession.setAttribute("productList", productList);
+
+// 跳转到显示购物车的页面
 %>
 <jsp:forward page="showcart.jsp" />
