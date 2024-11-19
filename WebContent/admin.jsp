@@ -7,11 +7,12 @@
     <title>Administrator Page</title>
 </head>
 <body>
-    <%
+    <% 
+    // 修改1: 检查用户是否已登录，并在未登录时重定向
     String userName = (String) session.getAttribute("authenticatedUser");
     if (userName == null) {
         if (!response.isCommitted()) {
-            response.sendRedirect("login.jsp");
+            response.sendRedirect("login.jsp"); // 未登录用户将被重定向到 login.jsp
         }
         return;
     }
@@ -19,6 +20,7 @@
     <header>
         <nav>
             <ul>
+                <!-- 修改2: 显示当前登录用户 -->
                 <li><a href='customer.jsp'><%= userName %></a></li>
                 <li><a href='logout.jsp'>Sign Out</a></li>
             </ul>
@@ -27,7 +29,8 @@
 
     <h3>Administrator Sales Report by Day</h3>
     <div>
-        <%
+        <% 
+        // 修改3: 使用 SQL 查询显示每日销售报告
         String url = "jdbc:sqlserver://cosc304_sqlserver:1433;DatabaseName=orders;TrustServerCertificate=True";
         String user = "sa", password = "304#sa#pw";
 
