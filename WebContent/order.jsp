@@ -56,42 +56,17 @@
         String user = "sa";
         String password = "304#sa#pw";
 
-        // Get customer id and password from request
-        String custId = request.getParameter("customerId");
-        String inputPassword = request.getParameter("password");
+        // Retrieve session to check if the user is logged in
+        HttpSession httpSession = request.getSession(false);
+        String authenticatedUser = (String) httpSession.getAttribute("authenticatedUser");
 
-        // Validate customer ID: it must be numeric
-        if (custId == null || !custId.matches("\\d+")) {
-            out.println("<p>Error: Invalid Customer ID. Please go back and enter a valid ID.</p>");
-            return;
-        }
-
-        // Check if the customer ID exists in the database
-        try (Connection con = DriverManager.getConnection(url, user, password)) {
-            // Check if customer ID exists in the 'Customer' table under the 'dbo' schema
-            String checkCustomerQuery = "SELECT COUNT(*) FROM dbo.Customer WHERE customerId = ?";
-            try (PreparedStatement stmt = con.prepareStatement(checkCustomerQuery)) {
-                stmt.setString(1, custId);
-                ResultSet rs = stmt.executeQuery();
-                rs.next();
-                if (rs.getInt(1) == 0) {
-                    out.println("<p>Error: Customer ID does not exist. Please enter a valid ID.</p>");
-                    return;
-                }
-            }
-        } catch (SQLException e) {
-            out.println("SQLException: " + e.getMessage());
-            return;
-        }
-
-        // Validate customer password: it must match the customer ID
-        if (!custId.equals(inputPassword)) {
-            out.println("<p>Error: Invalid password. Please go back and enter the correct password.</p>");
+        // Check if user is authenticated
+        if (authenticatedUser == null) {
+            response.sendRedirect("login.jsp"); // Redirect to login page if not authenticated
             return;
         }
 
         // Retrieve the shopping cart from session
-        HttpSession httpSession = request.getSession();
         @SuppressWarnings({"unchecked"})
         HashMap<String, ArrayList<Object>> productList = (HashMap<String, ArrayList<Object>>) httpSession.getAttribute("productList");
         if (productList == null || productList.isEmpty()) {
@@ -105,6 +80,8 @@
             // Insert order into OrderSummary table and retrieve generated order ID
             String insertOrderQuery = "INSERT INTO OrderSummary (customerId, orderDate, totalAmount) VALUES (?, GETDATE(), 0.0)";
             try (PreparedStatement orderStmt = con.prepareStatement(insertOrderQuery, Statement.RETURN_GENERATED_KEYS)) {
+                // Get customer ID from session (since the user is authenticated)
+                String custId = authenticatedUser;
                 orderStmt.setString(1, custId);
                 orderStmt.executeUpdate();
 
