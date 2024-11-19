@@ -80,7 +80,7 @@
             // Insert order into OrderSummary table and retrieve generated order ID
             String insertOrderQuery = "INSERT INTO OrderSummary (customerId, orderDate, totalAmount) VALUES (?, GETDATE(), 0.0)";
             try (PreparedStatement orderStmt = con.prepareStatement(insertOrderQuery, Statement.RETURN_GENERATED_KEYS)) {
-                // Get customer ID from session (since the user is authenticated)
+                // Use authenticatedUser (customerId) from session
                 String custId = authenticatedUser;
                 orderStmt.setString(1, custId);
                 orderStmt.executeUpdate();
